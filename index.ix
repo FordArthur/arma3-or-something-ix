@@ -12,10 +12,10 @@
 (function help on
     (when on (dl.util.fmessage "Gives you access to:"))
     (match on
-           "support" (dl.util.fmessage "fill name => fills your ammo or to someone \nheal name => heals you ammo or someone \nget weapon => gives you one of the weapons preconfigured (by default, there's \"sniper\", \"sniper-cqb\", \"DMR\", \"SBR\", \"machine-gun\" and \"rifle\")"
-           "grenadier" (dl.util.fmessage "shoot => shoots an RPG in your direction \naim number => how far the proyectile goes (75+ is the safe distance)")
-           "squad-leader" (dl.util.fmessage "mark acronym => marks your position as a target position for drone strykes \nreveal acronym => reveals the position of an acronym \ndrone acronym => bombs the position associated with said acronym"
-           "use /role to change your role, and use /help role to see what said role gives you\roles: support, grenadier, squad-leader"))))
+           "support" "fill name => fills your ammo or to someone \nheal name => heals you ammo or someone \nget weapon => gives you one of the weapons preconfigured (by default, there's \"sniper\", \"sniper-cqb\", \"DMR\", \"SBR\", \"machine-gun\" and \"rifle\")"
+           "grenadier" "shoot => shoots an RPG in your direction \naim number => how far the proyectile goes (75+ is the safe distance)")
+           "squad-leader" "mark acronym => marks your position as a target position for drone strikes \nreveal acronym => reveals the position of an acronym \ndrone acronym => bombs the position associated with said acronym"
+           "use /role to change your role, and use /help role to see what said role gives you\roles: support, grenadier, squad-leader")
 
 (function disperse-times t dispers vec3 
   (repeat (map + (repeat #(rand (-  dispers) dispers) 3) vec3) t))
@@ -48,8 +48,8 @@
 (function disperse-times t dispers vec3 
   (repeat (map + (repeat #(rand (-  dispers) dispers) 3) vec3) t))
 
-(function drone acron
-  (if (let pos (marked-posits acron))
+(function drone acron drone-name
+  (if (let pos (if acron (marked-posits acron) (dl.drone.get_position drone-name)))
       (-> pos
           @(disperse-times 5 5)
           (map @(disperse-times 10 50))
@@ -81,15 +81,17 @@
            "aim"      (zero sender (to-num distance))))
 (function squad-leader verb acron sender
     (match verb
+           "spawn"   (dl.drone.new sender (map + [0 50 0] ("position" (str "dl.players." sender))))
+           "go"      (dl.drone.set_target_position sender (map + [(rand -100 100) 50 (rand -100 100)] ("position" (str "dl.players." acron))))
            "mark"    (mark acron sender)
            "reveal"  (reveal sender acron)
-           "drone"   (drone acron)))
+           "drone"   (drone acron sender)))
 
 (function on-message sender _ msg
     (when (starts? prefix msg)
           (let [verb subj where] (split " "(sect msg (len prefix))))
           (when (= verb "role") (return (change-role sender subj)))
-          (when (= verb "help") (return (help subj)))
+          (when (= verb "help") (return (dl.util.fmessage (help subj))))
           (match (player-roles sender)
                  "support"      (support verb subj where sender)
                  "grenadier"    (grenadier verb subj sender)
