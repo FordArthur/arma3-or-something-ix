@@ -5,8 +5,17 @@
      prefix "/") ; set your prefix here
 
 (function change-role who role
-    (when ("is_alive" (str "dl.players." who)) (return (dl.util.fmessage "you can't change roles while you are alive!")))
+    (when ((str "dl.players." who ".is_alive")) (return (dl.util.fmessage "you can't change roles while you are alive!")))
+    (unless (["support" "grenadier" "squad-leader"] role) (return (dl.util.fmessage "provide a valid role name!")))
     (var! player-roles (assoc who role)))
+
+(function help on
+    (when on (dl.util.fmessage "Gives you access to:"))
+    (match on
+           "support" (dl.util.fmessage "fill name => fills your ammo or to someone \nheal name => heals you ammo or someone \nget weapon => gives you one of the weapons preconfigured (by default, there's \"sniper\", \"machine-gun\" and \"rifle\")"
+           "grenadier" (dl.util.fmessage "shoot => shoots an RPG in your direction \naim number => how far the proyectile goes (75+ is the safe distance)")
+           "squad-leader" (dl.util.fmessage "mark acronym => marks your position as a target position for drone strykes \nreveal acronym => reveals the position of an acronym \ndrone acronym => bombs the position associated with said acronym"
+           "use /role to change your role, and use /help role to see what said role gives you\roles: support, grenadier, squad-leader"))))
 
 (function disperse-times t dispers vec3 
   (repeat (map + (repeat #(rand (-  dispers) dispers) 3) vec3) t))
@@ -75,12 +84,14 @@
            "mark"    (mark acron sender)
            "reveal"  (reveal sender acron)
            "drone"   (drone acron)))
+
 (function on-message sender _ msg
     (when (starts? prefix msg)
           (let [verb subj where] (split " "(sect msg (len prefix))))
           (when (= verb "role") (return (change-role sender subj)))
+          (when (= verb "help") (return (help subj)))
           (match (player-roles sender)
-                 "support"      (support subj where sender)
-                 "grenadier"    (grenadier subj sender)
-                 "squad-leader" (squad-leader subj sender))))
+                 "support"      (support verb subj where sender)
+                 "grenadier"    (grenadier verb subj sender)
+                 "squad-leader" (squad-leader verb subj sender))))
 (dl.events.on_chat_message.connect on-message)
