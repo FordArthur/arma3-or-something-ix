@@ -1,7 +1,7 @@
 (var player-roles {}
      marked-posits {}
      zeros {}
-     set-ups {}
+     set-ups {"rifle" ["HK416A5" "nrel-b95baffb-4ded-4e4e-8f90-b5cb385e5f83"] "sniper" ["Remington700" "nrel-d0a4ba49-5dde-4c9d-8993-b23d99b0fbdf"] "machine-gun" ["M4A1" "nrel-5300d077-463b-4d4e-b0be-e110695d16f1"]}
      prefix "/") ; set your prefix here
 
 (function change-role who role
