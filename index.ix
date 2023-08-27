@@ -1,7 +1,7 @@
 (var player-roles {}
      marked-posits {}
      zeros {}
-     set-ups {"rifle" ["HK416A5" "nrel-b95baffb-4ded-4e4e-8f90-b5cb385e5f83"] "sniper" ["Remington700" "nrel-d0a4ba49-5dde-4c9d-8993-b23d99b0fbdf"] "machine-gun" ["M4A1" "nrel-5300d077-463b-4d4e-b0be-e110695d16f1"]}
+     set-ups {"rifle" ["M4A1" "nrel-287af239-0f76-47b6-ad61-b1333a20bfb7"] "DMR" ["SCARL" "nrel-e8c676d6-23d6-4558-88ac-ebd0ef10e329"] "sniper-cqb" ["Remington700" "nrel-12bffa2e-69b3-41c9-9779-64d3f86f9016"] "machine-gun" ["M4A1" "nrel-5300d077-463b-4d4e-b0be-e110695d16f1"] "SBR" ["M4A1" "nrel-0243f5d0-90c8-48f5-b111-1500891c26cb"] "sniper" ["Remington 700" "nrel-99b0060a-c94e-4b1b-beda-3ad0fd775248"]}
      prefix "/") ; set your prefix here
 
 (function change-role who role
@@ -12,7 +12,7 @@
 (function help on
     (when on (dl.util.fmessage "Gives you access to:"))
     (match on
-           "support" (dl.util.fmessage "fill name => fills your ammo or to someone \nheal name => heals you ammo or someone \nget weapon => gives you one of the weapons preconfigured (by default, there's \"sniper\", \"machine-gun\" and \"rifle\")"
+           "support" (dl.util.fmessage "fill name => fills your ammo or to someone \nheal name => heals you ammo or someone \nget weapon => gives you one of the weapons preconfigured (by default, there's \"sniper\", \"sniper-cqb\", \"DMR\", \"SBR\", \"machine-gun\" and \"rifle\")"
            "grenadier" (dl.util.fmessage "shoot => shoots an RPG in your direction \naim number => how far the proyectile goes (75+ is the safe distance)")
            "squad-leader" (dl.util.fmessage "mark acronym => marks your position as a target position for drone strykes \nreveal acronym => reveals the position of an acronym \ndrone acronym => bombs the position associated with said acronym"
            "use /role to change your role, and use /help role to see what said role gives you\roles: support, grenadier, squad-leader"))))
@@ -95,3 +95,4 @@
                  "grenadier"    (grenadier verb subj sender)
                  "squad-leader" (squad-leader verb subj sender))))
 (dl.events.on_chat_message.connect on-message)
+(dl.util.fmessage "/help")
