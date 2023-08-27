@@ -1,0 +1,86 @@
+(var player-roles {}
+     marked-posits {}
+     zeros {}
+     set-ups {}
+     prefix "/") ; set your prefix here
+
+(function change-role who role
+    (when ("is_alive" (str "dl.players." who)) (return (dl.util.fmessage "you can't change roles while you are alive!")))
+    (var! player-roles (assoc who role)))
+
+(function disperse-times t dispers vec3 
+  (repeat (map + (repeat #(rand (-  dispers) dispers) 3) vec3) t))
+
+(function shoot-proyectile evar mult
+  (let pos ("position" evar) 
+       tar (map #(+ (* mult %) %1) ("direction" evar) pos))
+  (repeat #(dl.util.fire pos tar "7.62x51_fedarm_m62_147gr_red_tracer_cr-762-tr" (* mult 10)) 50)
+  (map #(dl.util.explosion % "F1") (disperse-times 5 5 tar)))
+
+(function shoot player
+  (if (var evar (str "dl.players." player)
+           mult (zeros player))
+      (shoot-proyectile evar mult)
+      (dl.util.fmessage "zero your weapon first!")))
+
+(function zero player distance
+  (var! zeros (assoc player distance)))
+
+(function mark acron sender
+  (unless acron (do (dl.util.fmessage "provide an acronym") (return)))
+  (var! marked-posits (assoc acron (eval (str "$dl.players." sender ".position")))))
+
+(var to-digit {"0" "z*r*" "1" "*n*" "2" "tw**" "3" "thr**" "4" "f**r" "5" "f*v*" "6" "s*x" "7" "s*v*n" "8" "**ght" "9" "n*n*" "-" "minus"}
+     censor #(-> % (map #(-> % round str (map to-digit) (join " "))) (join ",\n")))
+
+(function reveal sender _acron
+  (dl.util.fmessage (censor (if _acron (marked-posits _acron) (eval (str "$dl.players." sender ".position"))))))
+
+(function disperse-times t dispers vec3 
+  (repeat (map + (repeat #(rand (-  dispers) dispers) 3) vec3) t))
+
+(function drone acron
+  (if (let pos (marked-posits acron))
+      (-> pos
+          @(disperse-times 5 5)
+          (map @(disperse-times 10 50))
+          (map (fn vecs3 (wait .25) (map #(dl.util.explosion % "F1") vecs3))))
+      (dl.util.fmessage "uknown mark")))
+
+(function fill-ammo who
+    ((str "dl.players." who ".fill_ammo") "primary")
+    ((str "dl.players." who ".fill_ammo") "secondary"))
+(function heal who
+    ((str "$dl.players." who ".health") 120))
+
+(function f-on-who? f who me
+    (if who (f who)
+            (f me)))
+
+(function GET player acron where
+  (let [weapon code] (set-ups acron))
+  ((str "dl.players." player ".set_player_weapon") where weapon (dl.util.read_setup code)))
+
+(function support verb who/acron where sender
+    (match verb
+           "fill" (f-on-who? fill-ammo who/acron sender)
+           "heal" (f-on-who? heal who/acron sender)
+           "get"  (GET sender who/acron where)))
+(function grenadier verb distance sender
+    (match verb
+           "shoot"    (shoot sender)
+           "aim"      (zero sender (to-num distance))))
+(function squad-leader verb acron sender
+    (match verb
+           "mark"    (mark acron sender)
+           "reveal"  (reveal sender acron)
+           "drone"   (drone acron)))
+(function on-message sender _ msg
+    (when (starts? prefix msg)
+          (let [verb subj where] (split " "(sect msg (len prefix))))
+          (when (= verb "role") (return (change-role sender subj)))
+          (match (player-roles sender)
+                 "support"      (support subj where sender)
+                 "grenadier"    (grenadier subj sender)
+                 "squad-leader" (squad-leader subj sender))))
+(dl.events.on_chat_message.connect on-message)
