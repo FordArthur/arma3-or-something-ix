@@ -2,6 +2,7 @@
      marked-posits {}
      zeros {}
      set-ups {"rifle" ["M4A1" "nrel-287af239-0f76-47b6-ad61-b1333a20bfb7"] "DMR" ["SCARL" "nrel-e8c676d6-23d6-4558-88ac-ebd0ef10e329"] "sniper-cqb" ["Remington700" "nrel-12bffa2e-69b3-41c9-9779-64d3f86f9016"] "machine-gun" ["M4A1" "nrel-5300d077-463b-4d4e-b0be-e110695d16f1"] "SBR" ["M4A1" "nrel-0243f5d0-90c8-48f5-b111-1500891c26cb"] "sniper" ["Remington 700" "nrel-99b0060a-c94e-4b1b-beda-3ad0fd775248"]}
+     claymores []
      prefix "/") ; set your prefix here
 
 (function change-role who role
@@ -13,7 +14,7 @@
     (when on (dl.util.fmessage "Gives you access to:"))
     (match on
            "support" "fill name => fills your ammo or to someone \nheal name => heals you ammo or someone \nget weapon => gives you one of the weapons preconfigured (by default, there's \"sniper\", \"sniper-cqb\", \"DMR\", \"SBR\", \"machine-gun\" and \"rifle\")"
-           "grenadier" "shoot => shoots an RPG in your direction \naim number => how far the proyectile goes (75+ is the safe distance)")
+           "grenadier" "shoot => shoots an RPG in your direction \naim number => how far the proyectile goes (75+ is the safe distance) \nplant => plants a claymore (takes 10s to arm)")
            "squad-leader" "mark acronym => marks your position as a target position for drone strikes \nreveal acronym => reveals the position of an acronym \ndrone acronym => bombs the position associated with said acronym"
            "use /role to change your role, and use /help role to see what said role gives you\roles: support, grenadier, squad-leader")
 
@@ -34,6 +35,21 @@
 
 (function zero player distance
   (var! zeros (assoc player distance)))
+
+(function plant player
+  (dl.util.fmessage "planting... (10s until activation)")
+  (let pos ("position" (str "dl.players." player)))
+  (wait 10)
+  (var! claymores (append pos)))
+
+(function abs3 p1 p2
+  (sqrt (.. + (map #(** (- %1 %) 2) p1 p2))))
+(function near-sub10 p1
+  (0 (filter #(>= 10 (abs3 p1 %)) claymores)))
+
+(function on-tick
+  (map #(when (let nearclaymore (near-sub10 %)) (dl.util.explosion nearclaymore "F1"))  (map #("position" (str "dl.players." %)) (filter #((str "dl.players." % ".is_alive")) (dl.list_players)))))
+(ticked.connect on-tick)
 
 (function mark acron sender
   (unless acron (do (dl.util.fmessage "provide an acronym") (return)))
@@ -78,7 +94,8 @@
 (function grenadier verb distance sender
     (match verb
            "shoot"    (shoot sender)
-           "aim"      (zero sender (to-num distance))))
+           "aim"      (zero sender (to-num distance))
+           "plant"    (plant sender)))
 (function squad-leader verb acron sender
     (match verb
            "spawn"   (dl.drone.new sender (map + [0 50 0] ("position" (str "dl.players." sender))))
